@@ -68,6 +68,12 @@ h_week15[["percent.mt"]] <- PercentageFeatureSet(h_week15, pattern = "^MT-")
 h_week16[["percent.mt"]] <- PercentageFeatureSet(h_week16, pattern = "^MT-")
 
 
+h_week6[["age_weeks"]] <- "week6"
+h_week7[["age_weeks"]] <- "week7"
+h_week8[["age_weeks"]] <- "week8"
+h_week12[["age_weeks"]] <- "week12"
+h_week15[["age_weeks"]] <- "week15"
+h_week16[["age_weeks"]] <- "week16"
 ```
 
 `Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
@@ -109,12 +115,69 @@ h_week16 <- subset(h_week16, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 &
 ```
 
 
+Now moving on to dataset integration based on [this workflow](https://satijalab.org/seurat/articles/integration_introduction.html)
+
+```{r normalize}
+
+sc_testis_h.list <- c(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16)
+
+sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
+
+# select features that are repeatedly variable across datasets for integration
+features <- SelectIntegrationFeatures(object.list = sc_testis_h.list, nfeatures = 3000)
+sc_testis_h.list <- PrepSCTIntegration(object.list = sc_testis_h.list, anchor.features = features)
+```
+
+```{r object integration}
+
+testis.anchors <- FindIntegrationAnchors(object.list = sc_testis_h.list, normalization.method = "SCT", anchor.features = features)
+# this command creates an 'integrated' data assay
+testis.combined <- IntegrateData(anchorset = testis.anchors, normalization.method = "SCT")
 
 
+```
+
+```{r analyze integrated data}
+
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(testis.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+
+testis.combined <- RunPCA(testis.combined, verbose = FALSE)
+testis.combined <- RunUMAP(testis.combined, reduction = "pca", dims = 1:30)
+testis.combined <- FindNeighbors(testis.combined, reduction = "pca", dims = 1:30)
+testis.combined <- FindClusters(testis.combined, resolution = 0.5)
+
+```
 
 
+```{r plots}
+
+p1 <- DimPlot(testis.combined, reduction = "umap", group.by = "age_weeks")
+p2 <- DimPlot(testis.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+
+```
+
+```{r plots cont}
+
+DimPlot(testis.combined, reduction = "umap", split.by = "age_weeks")
+```
+
+## Next Use Seurat to identify conserved cell markers from the clusters across time
+
+from tutorial "This function performs differential gene expression testing for each dataset/group and combines the p-values using meta-analysis methods from the MetaDE R package. For example, we can calculated the genes that are conserved markers irrespective of stimulation condition in cluster 6 (NK cells)."
+
+this uses the original data, not the integrated data
+
+```{r conserved markers}
+
+DefaultAssay(testis.combined) <- "RNA"
+
+markers <- FindConservedMarkers(testis.combined, ident.1 = 0, grouping.var = "stim", verbose = FALSE)
+head(markers)
 
 
-
-
+```
 
