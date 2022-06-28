@@ -121,13 +121,14 @@ Now moving on to dataset integration based on [this workflow](https://satijalab.
 ```{r normalize}
 
 sc_testis_h.list <- c(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16)
-
 sc_testis_h_emb.list <- c(h_week6, h_week7, h_week8)
 sc_testis_h_fet.list <- c(h_week12, h_week15, h_week16)
 
+
+sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
 sc_testis_h_emb.list <- lapply(X = sc_testis_h_emb.list, FUN = SCTransform)
 sc_testis_h_fet.list <- lapply(X = sc_testis_h_fet.list, FUN = SCTransform)
-sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
+
 
 # select features that are repeatedly variable across datasets for integration
 features_all <- SelectIntegrationFeatures(object.list = sc_testis_h.list, nfeatures = 3000)
