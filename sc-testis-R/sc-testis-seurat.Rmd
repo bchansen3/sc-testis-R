@@ -164,7 +164,11 @@ p1 + p2
 
 DimPlot(testis.combined, reduction = "umap", split.by = "age_weeks")
 ```
+```{r save Rdata file}
 
+save(testis.combined, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined.RData")
+
+```
 ## Next Use Seurat to identify conserved cell markers from the clusters across time
 
 from tutorial "This function performs differential gene expression testing for each dataset/group and combines the p-values using meta-analysis methods from the MetaDE R package. For example, we can calculated the genes that are conserved markers irrespective of stimulation condition in cluster 6 (NK cells)."
@@ -175,8 +179,14 @@ this uses the original data, not the integrated data
 
 DefaultAssay(testis.combined) <- "RNA"
 
-markers <- FindConservedMarkers(testis.combined, ident.1 = 0, grouping.var = "stim", verbose = FALSE)
-head(markers)
+clusts <- 0:17 
+
+conserved.markers <- lapply(X = clusts, FUN = function(x){
+  
+  x <- FindConservedMarkers(testis.combined, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
+x <- head(x)
+  })
+
 
 
 ```
