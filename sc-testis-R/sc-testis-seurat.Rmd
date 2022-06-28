@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(Seurat)
 library(dplyr)
 library(patchwork)
+library(metap)
 
 ```
 
@@ -121,18 +122,41 @@ Now moving on to dataset integration based on [this workflow](https://satijalab.
 
 sc_testis_h.list <- c(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16)
 
+sc_testis_h_emb.list <- c(h_week6, h_week7, h_week8)
+sc_testis_h_fet.list <- c(h_week12, h_week15, h_week16)
+
+sc_testis_h_emb.list <- lapply(X = sc_testis_h_emb.list, FUN = SCTransform)
+sc_testis_h_fet.list <- lapply(X = sc_testis_h_fet.list, FUN = SCTransform)
 sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
 
 # select features that are repeatedly variable across datasets for integration
-features <- SelectIntegrationFeatures(object.list = sc_testis_h.list, nfeatures = 3000)
-sc_testis_h.list <- PrepSCTIntegration(object.list = sc_testis_h.list, anchor.features = features)
+features_all <- SelectIntegrationFeatures(object.list = sc_testis_h.list, nfeatures = 3000)
+sc_testis_h.list <- PrepSCTIntegration(object.list = sc_testis_h.list, anchor.features = features_all)
+
+
+features_fet <- SelectIntegrationFeatures(object.list = sc_testis_h_fet.list, nfeatures = 3000)
+sc_testis_h_fet.list <- PrepSCTIntegration(object.list = sc_testis_h_fet.list, anchor.features = features_fet)
+
+
+features_emb <- SelectIntegrationFeatures(object.list = sc_testis_h_emb.list, nfeatures = 3000)
+sc_testis_h_emb.list <- PrepSCTIntegration(object.list = sc_testis_h_emb.list, anchor.features = features_emb)
+
+
 ```
 
 ```{r object integration}
 
-testis.anchors <- FindIntegrationAnchors(object.list = sc_testis_h.list, normalization.method = "SCT", anchor.features = features)
+testis.anchors_all <- FindIntegrationAnchors(object.list = sc_testis_h.list, normalization.method = "SCT", anchor.features = features_all)
 # this command creates an 'integrated' data assay
-testis.combined <- IntegrateData(anchorset = testis.anchors, normalization.method = "SCT")
+testis.combined_all <- IntegrateData(anchorset = testis.anchors_all, normalization.method = "SCT")
+
+testis.anchors_fet <- FindIntegrationAnchors(object.list = sc_testis_h_fet.list, normalization.method = "SCT", anchor.features = features_fet)
+# this command creates an 'integrated' data assay
+testis.combined_fet <- IntegrateData(anchorset = testis.anchors_fet, normalization.method = "SCT")
+
+testis.anchors_emb <- FindIntegrationAnchors(object.list = sc_testis_h_emb.list, normalization.method = "SCT", anchor.features = features_emb)
+# this command creates an 'integrated' data assay
+testis.combined_emb <- IntegrateData(anchorset = testis.anchors_emb, normalization.method = "SCT")
 
 
 ```
@@ -140,7 +164,10 @@ testis.combined <- IntegrateData(anchorset = testis.anchors, normalization.metho
 ```{r analyze integrated data}
 
 # original unmodified data still resides in the 'RNA' assay
-DefaultAssay(testis.combined) <- "integrated"
+DefaultAssay(testis.combined_all) <- "integrated"
+DefaultAssay(testis.combined_fet) <- "integrated"
+DefaultAssay(testis.combined_emb) <- "integrated"
+
 
 # Run the standard workflow for visualization and clustering
 
@@ -148,6 +175,16 @@ testis.combined <- RunPCA(testis.combined, verbose = FALSE)
 testis.combined <- RunUMAP(testis.combined, reduction = "pca", dims = 1:30)
 testis.combined <- FindNeighbors(testis.combined, reduction = "pca", dims = 1:30)
 testis.combined <- FindClusters(testis.combined, resolution = 0.5)
+
+testis.combined_fet <- RunPCA(testis.combined_fet, verbose = FALSE)
+testis.combined_fet <- RunUMAP(testis.combined_fet, reduction = "pca", dims = 1:30)
+testis.combined_fet <- FindNeighbors(testis.combined_fet, reduction = "pca", dims = 1:30)
+testis.combined_fet <- FindClusters(testis.combined_fet, resolution = 0.5)
+
+testis.combined_emb <- RunPCA(testis.combined_emb, verbose = FALSE)
+testis.combined_emb <- RunUMAP(testis.combined_emb, reduction = "pca", dims = 1:30)
+testis.combined_emb <- FindNeighbors(testis.combined_emb, reduction = "pca", dims = 1:30)
+testis.combined_emb <- FindClusters(testis.combined_emb, resolution = 0.5)
 
 ```
 
@@ -164,10 +201,16 @@ p1 + p2
 
 DimPlot(testis.combined, reduction = "umap", split.by = "age_weeks")
 ```
-```{r save Rdata file}
+```{r save load Rdata file}
 
-save(testis.combined, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined.RData")
+save(testis.combined_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_all.RData")
 
+save(testis.combined_emb, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_emb.RData")
+
+save(testis.combined_fet, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_fet.RData")
+
+
+#load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined.RData")
 ```
 ## Next Use Seurat to identify conserved cell markers from the clusters across time
 
@@ -177,16 +220,15 @@ this uses the original data, not the integrated data
 
 ```{r conserved markers}
 
-DefaultAssay(testis.combined) <- "RNA"
+DefaultAssay(testis.combined_all) <- "RNA"
 
-clusts <- 0:17 
+clusts <- 0:17
 
 conserved.markers <- lapply(X = clusts, FUN = function(x){
   
-  x <- FindConservedMarkers(testis.combined, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
-x <- head(x)
+  x <- FindConservedMarkers(testis.combined_all, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
+  x <- head(x)
   })
-
 
 
 ```
