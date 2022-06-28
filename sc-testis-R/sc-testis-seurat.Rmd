@@ -9,22 +9,112 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r load packages, include=FALSE}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+library(Seurat)
+library(dplyr)
+library(patchwork)
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+## Load Seurat Objects
 
-You can also embed plots, for example:
+Each dataset will become a unique Seurat object. The data is loaded based on the: matrix, genes, barcodes files.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+following steps based on [Seurat tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html)
+
+
+```{r load data}
+
+gen_direct = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356"
+
+
+h_week6.d <- Read10X(data.dir = paste0(gen_direct,"/week6/"))
+h_week7.d <- Read10X(data.dir = paste0(gen_direct,"/week7/"))
+h_week8.d <- Read10X(data.dir = paste0(gen_direct,"/week8/"))
+h_week12.d <- Read10X(data.dir = paste0(gen_direct,"/week12/"))
+h_week15.d <- Read10X(data.dir = paste0(gen_direct,"/week15/"))
+h_week16.d <- Read10X(data.dir = paste0(gen_direct,"/week16/"))
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r build object}
+
+h_week6 <- CreateSeuratObject(counts = h_week6.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_week7 <- CreateSeuratObject(counts = h_week7.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_week8 <- CreateSeuratObject(counts = h_week8.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_week12 <- CreateSeuratObject(counts = h_week12.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_week15 <- CreateSeuratObject(counts = h_week15.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_week16 <- CreateSeuratObject(counts = h_week16.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+
+
+```
+
+## Preprocess individual datasets
+
+Now that the datasets are loaded as Seurat objects -- use the mitochondrial DNA and RNA counts metrics for initial QC.
+
+
+THe first step is to identify the percentage of transcripts coming from mitochondria, this is indicative of cell death and may not be something we want to keep (ie remove dead cells)
+
+```{r percent mitochondrial, echo=FALSE}
+
+h_week6[["percent.mt"]] <- PercentageFeatureSet(h_week6, pattern = "^MT-")
+h_week7[["percent.mt"]] <- PercentageFeatureSet(h_week7, pattern = "^MT-")
+h_week8[["percent.mt"]] <- PercentageFeatureSet(h_week8, pattern = "^MT-")
+h_week12[["percent.mt"]] <- PercentageFeatureSet(h_week12, pattern = "^MT-")
+h_week15[["percent.mt"]] <- PercentageFeatureSet(h_week15, pattern = "^MT-")
+h_week16[["percent.mt"]] <- PercentageFeatureSet(h_week16, pattern = "^MT-")
+
+
+```
+
+`Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r filter, fig.show="hold", out.width="50%"}}
+
+vln1 <- VlnPlot(h_week6, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln2 <- VlnPlot(h_week7, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln3 <- VlnPlot(h_week8, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln4 <- VlnPlot(h_week12, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln5 <- VlnPlot(h_week15, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln6 <- VlnPlot(h_week16, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+
+```
+
+```{r show plot}
+
+vln6
+
+
+
+```
+```{R qc plots}
+
+plot1 <- FeatureScatter(h_week6, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(h_week6, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 + plot2
+
+```
+```{r subset objects}
+
+h_week6 <- subset(h_week6, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_week7 <- subset(h_week7, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_week8 <- subset(h_week8, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_week12 <- subset(h_week12, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_week15 <- subset(h_week15, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_week16 <- subset(h_week16, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+```
+
+
+
+
+
+
+
+
+
+
+
