@@ -79,7 +79,7 @@ h_week16[["age_weeks"]] <- "week16"
 
 `Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-```{r filter, fig.show="hold", out.width="50%"}}
+```{r filter, eval=FALSE, fig.show="hold", include=FALSE, out.width="50%"}}
 
 vln1 <- VlnPlot(h_week6, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 vln2 <- VlnPlot(h_week7, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
@@ -90,7 +90,7 @@ vln6 <- VlnPlot(h_week16, features = c("nFeature_RNA", "nCount_RNA", "percent.mt
 
 ```
 
-```{r show plot}
+```{r show plot, eval=FALSE, include=FALSE}
 
 vln6
 
@@ -124,6 +124,7 @@ sc_testis_h.list <- c(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16)
 sc_testis_h_emb.list <- c(h_week6, h_week7, h_week8)
 sc_testis_h_fet.list <- c(h_week12, h_week15, h_week16)
 
+rm(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16, h_week6.d, h_week7.d, h_week8.d, h_week12.d, h_week15.d, h_week16.d)
 
 sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
 sc_testis_h_emb.list <- lapply(X = sc_testis_h_emb.list, FUN = SCTransform)
@@ -172,10 +173,10 @@ DefaultAssay(testis.combined_emb) <- "integrated"
 
 # Run the standard workflow for visualization and clustering
 
-testis.combined <- RunPCA(testis.combined, verbose = FALSE)
-testis.combined <- RunUMAP(testis.combined, reduction = "pca", dims = 1:30)
-testis.combined <- FindNeighbors(testis.combined, reduction = "pca", dims = 1:30)
-testis.combined <- FindClusters(testis.combined, resolution = 0.5)
+testis.combined_all <- RunPCA(testis.combined_all, verbose = FALSE)
+testis.combined_all <- RunUMAP(testis.combined_all, reduction = "pca", dims = 1:30)
+testis.combined_all <- FindNeighbors(testis.combined_all, reduction = "pca", dims = 1:30)
+testis.combined_all <- FindClusters(testis.combined_all, resolution = 0.5)
 
 testis.combined_fet <- RunPCA(testis.combined_fet, verbose = FALSE)
 testis.combined_fet <- RunUMAP(testis.combined_fet, reduction = "pca", dims = 1:30)
@@ -192,17 +193,15 @@ testis.combined_emb <- FindClusters(testis.combined_emb, resolution = 0.5)
 
 ```{r plots}
 
-p1 <- DimPlot(testis.combined, reduction = "umap", group.by = "age_weeks")
-p2 <- DimPlot(testis.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 <- DimPlot(testis.combined_fet, reduction = "umap", group.by = "age_weeks")
+p2 <- DimPlot(testis.combined_fet, reduction = "umap", label = TRUE, repel = TRUE)
 p1 + p2
 
 ```
 
-```{r plots cont}
 
-DimPlot(testis.combined, reduction = "umap", split.by = "age_weeks")
-```
-```{r save load Rdata file}
+
+```{r saveloadRdatafile}
 
 save(testis.combined_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_all.RData")
 
@@ -222,14 +221,39 @@ this uses the original data, not the integrated data
 ```{r conserved markers}
 
 DefaultAssay(testis.combined_all) <- "RNA"
+DefaultAssay(testis.combined_emb) <- "RNA"
+DefaultAssay(testis.combined_fet) <- "RNA"
 
 clusts <- 0:17
+clusts_fet <- 0:15
+clusts_emb <- 0:11
 
-conserved.markers <- lapply(X = clusts, FUN = function(x){
+conserved.markers_all <- lapply(X = clusts, FUN = function(x){
   
   x <- FindConservedMarkers(testis.combined_all, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
-  x <- head(x)
   })
+
+conserved.markers_emb <- lapply(X = clusts_emb, FUN = function(x){
+  
+  x <- FindConservedMarkers(testis.combined_emb, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
+  })
+
+
+conserved.markers_fet <- lapply(X = clusts_fet, FUN = function(x){
+  
+  x <- FindConservedMarkers(testis.combined_fet, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
+  })
+```
+
+save as data files
+
+```{r save files}
+
+save(conserved.markers_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_all.RData")
+
+save(conserved.markers_emb, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_emb.RData")
+
+save(conserved.markers_fet, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_fet.RData")
 
 
 ```
