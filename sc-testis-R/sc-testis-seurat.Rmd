@@ -16,6 +16,11 @@ library(dplyr)
 library(patchwork)
 library(metap)
 
+
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(mosaicData, tibble, tidyr, stringr, purrr)
+
+
 ```
 
 ## Load Seurat Objects
@@ -258,3 +263,37 @@ save(conserved.markers_fet, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse
 
 ```
 
+
+save as data files
+
+```{r load files}
+
+load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_all.RData")
+
+load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_emb.RData")
+
+load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_fet.RData")
+
+```
+
+
+Now we have Seurat objects for all data, embryonic only, and fetal only.
+
+We also have the, "conserved.markers_all," 
+
+
+```{r flatten list}
+
+names(conserved.markers_fet) <- clusts_fet[0:15]
+names(conserved.markers_emb) <- clusts_emb[0:11]
+names(conserved.markers_all) <- clusts[0:17]
+
+
+# Flatten list of dataframes
+
+conserved.markers_fet_top10 <- map_df(conserved.markers_fet, head, 10, .id = 'cluster')
+conserved.markers_emb_top10 <- map_df(conserved.markers_emb, head, 10, .id = 'cluster')
+conserved.markers_all_top10 <- map_df(conserved.markers_all, head, 10, .id = 'cluster')
+
+
+```
