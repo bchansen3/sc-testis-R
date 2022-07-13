@@ -33,27 +33,21 @@ following steps based on [Seurat tutorial](https://satijalab.org/seurat/articles
 
 ```{r load data}
 
-gen_direct = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356"
+gen_direct = "/bigdata/faustmanlab/bch/sc-testis/human/gse124263"
 
 
-h_week6.d <- Read10X(data.dir = paste0(gen_direct,"/week6/"))
-h_week7.d <- Read10X(data.dir = paste0(gen_direct,"/week7/"))
-h_week8.d <- Read10X(data.dir = paste0(gen_direct,"/week8/"))
-h_week12.d <- Read10X(data.dir = paste0(gen_direct,"/week12/"))
-h_week15.d <- Read10X(data.dir = paste0(gen_direct,"/week15/"))
-h_week16.d <- Read10X(data.dir = paste0(gen_direct,"/week16/"))
+h_pnd2.d <- Read10X(data.dir = paste0(gen_direct,"/pnd2/"))
+h_pnd7.d <- Read10X(data.dir = paste0(gen_direct,"/pnd7/"))
+
 
 ```
 
 
 ```{r build object}
 
-h_week6 <- CreateSeuratObject(counts = h_week6.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
-h_week7 <- CreateSeuratObject(counts = h_week7.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
-h_week8 <- CreateSeuratObject(counts = h_week8.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
-h_week12 <- CreateSeuratObject(counts = h_week12.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
-h_week15 <- CreateSeuratObject(counts = h_week15.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
-h_week16 <- CreateSeuratObject(counts = h_week16.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_pnd2 <- CreateSeuratObject(counts = h_pnd2.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+h_pnd7 <- CreateSeuratObject(counts = h_pnd7.d, project = "sc-testis-h", min.cells = 3, min.features = 200)
+
 
 
 ```
@@ -67,57 +61,38 @@ THe first step is to identify the percentage of transcripts coming from mitochon
 
 ```{r percent mitochondrial, echo=FALSE}
 
-h_week6[["percent.mt"]] <- PercentageFeatureSet(h_week6, pattern = "^MT-")
-h_week7[["percent.mt"]] <- PercentageFeatureSet(h_week7, pattern = "^MT-")
-h_week8[["percent.mt"]] <- PercentageFeatureSet(h_week8, pattern = "^MT-")
-h_week12[["percent.mt"]] <- PercentageFeatureSet(h_week12, pattern = "^MT-")
-h_week15[["percent.mt"]] <- PercentageFeatureSet(h_week15, pattern = "^MT-")
-h_week16[["percent.mt"]] <- PercentageFeatureSet(h_week16, pattern = "^MT-")
+h_pnd2[["percent.mt"]] <- PercentageFeatureSet(h_pnd2, pattern = "^MT-")
+h_pnd7[["percent.mt"]] <- PercentageFeatureSet(h_pnd7, pattern = "^MT-")
 
 
-h_week6[["age_weeks"]] <- "week6"
-h_week7[["age_weeks"]] <- "week7"
-h_week8[["age_weeks"]] <- "week8"
-h_week12[["age_weeks"]] <- "week12"
-h_week15[["age_weeks"]] <- "week15"
-h_week16[["age_weeks"]] <- "week16"
+
+h_pnd2[["age_weeks"]] <- "pnd2"
+h_pnd7[["age_weeks"]] <- "pnd7"
+
 ```
 
 `Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ```{r filter, eval=FALSE, fig.show="hold", include=FALSE, out.width="50%"}}
 
-vln1 <- VlnPlot(h_week6, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-vln2 <- VlnPlot(h_week7, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-vln3 <- VlnPlot(h_week8, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-vln4 <- VlnPlot(h_week12, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-vln5 <- VlnPlot(h_week15, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-vln6 <- VlnPlot(h_week16, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
-
-```
-
-```{r show plot, eval=FALSE, include=FALSE}
-
-vln6
-
+vln1 <- VlnPlot(h_pnd2, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+vln2 <- VlnPlot(h_pnd7, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 
 
 ```
+
 ```{R qc plots}
 
-plot1 <- FeatureScatter(h_week6, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(h_week6, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot1 <- FeatureScatter(h_pnd2, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(h_pnd7, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
 plot1 + plot2
 
 ```
 ```{r subset objects}
 
-h_week6 <- subset(h_week6, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-h_week7 <- subset(h_week7, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-h_week8 <- subset(h_week8, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-h_week12 <- subset(h_week12, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-h_week15 <- subset(h_week15, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
-h_week16 <- subset(h_week16, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_pnd2 <- subset(h_pnd2, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+h_pnd7 <- subset(h_pnd7, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
 
 ```
 
@@ -126,46 +101,24 @@ Now moving on to dataset integration based on [this workflow](https://satijalab.
 
 ```{r normalize}
 
-sc_testis_h.list <- c(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16)
-sc_testis_h_emb.list <- c(h_week6, h_week7, h_week8)
-sc_testis_h_fet.list <- c(h_week12, h_week15, h_week16)
+sc_testis_h.neo.list <- c(h_pnd2, h_pnd7)
 
-rm(h_week6, h_week7, h_week8, h_week12, h_week15, h_week16, h_week6.d, h_week7.d, h_week8.d, h_week12.d, h_week15.d, h_week16.d)
 
-sc_testis_h.list <- lapply(X = sc_testis_h.list, FUN = SCTransform)
-sc_testis_h_emb.list <- lapply(X = sc_testis_h_emb.list, FUN = SCTransform)
-sc_testis_h_fet.list <- lapply(X = sc_testis_h_fet.list, FUN = SCTransform)
+sc_testis_h.neo.list <- lapply(X = sc_testis_h.neo.list, FUN = SCTransform)
+
 
 
 # select features that are repeatedly variable across datasets for integration
-features_all <- SelectIntegrationFeatures(object.list = sc_testis_h.list, nfeatures = 3000)
-sc_testis_h.list <- PrepSCTIntegration(object.list = sc_testis_h.list, anchor.features = features_all)
-
-
-features_fet <- SelectIntegrationFeatures(object.list = sc_testis_h_fet.list, nfeatures = 3000)
-sc_testis_h_fet.list <- PrepSCTIntegration(object.list = sc_testis_h_fet.list, anchor.features = features_fet)
-
-
-features_emb <- SelectIntegrationFeatures(object.list = sc_testis_h_emb.list, nfeatures = 3000)
-sc_testis_h_emb.list <- PrepSCTIntegration(object.list = sc_testis_h_emb.list, anchor.features = features_emb)
-
+features_all <- SelectIntegrationFeatures(object.list = sc_testis_h.neo.list, nfeatures = 3000)
+sc_testis_h.neo.list <- PrepSCTIntegration(object.list = sc_testis_h.neo.list, anchor.features = features_all)
 
 ```
 
 ```{r object integration}
 
-testis.anchors_all <- FindIntegrationAnchors(object.list = sc_testis_h.list, normalization.method = "SCT", anchor.features = features_all)
+testis.anchors_all <- FindIntegrationAnchors(object.list = sc_testis_h.neo.list, normalization.method = "SCT", anchor.features = features_all)
 # this command creates an 'integrated' data assay
 testis.combined_all <- IntegrateData(anchorset = testis.anchors_all, normalization.method = "SCT")
-
-testis.anchors_fet <- FindIntegrationAnchors(object.list = sc_testis_h_fet.list, normalization.method = "SCT", anchor.features = features_fet)
-# this command creates an 'integrated' data assay
-testis.combined_fet <- IntegrateData(anchorset = testis.anchors_fet, normalization.method = "SCT")
-
-testis.anchors_emb <- FindIntegrationAnchors(object.list = sc_testis_h_emb.list, normalization.method = "SCT", anchor.features = features_emb)
-# this command creates an 'integrated' data assay
-testis.combined_emb <- IntegrateData(anchorset = testis.anchors_emb, normalization.method = "SCT")
-
 
 ```
 
@@ -173,8 +126,7 @@ testis.combined_emb <- IntegrateData(anchorset = testis.anchors_emb, normalizati
 
 # original unmodified data still resides in the 'RNA' assay
 DefaultAssay(testis.combined_all) <- "integrated"
-DefaultAssay(testis.combined_fet) <- "integrated"
-DefaultAssay(testis.combined_emb) <- "integrated"
+
 
 
 # Run the standard workflow for visualization and clustering
@@ -184,23 +136,13 @@ testis.combined_all <- RunUMAP(testis.combined_all, reduction = "pca", dims = 1:
 testis.combined_all <- FindNeighbors(testis.combined_all, reduction = "pca", dims = 1:30)
 testis.combined_all <- FindClusters(testis.combined_all, resolution = 0.5)
 
-testis.combined_fet <- RunPCA(testis.combined_fet, verbose = FALSE)
-testis.combined_fet <- RunUMAP(testis.combined_fet, reduction = "pca", dims = 1:30)
-testis.combined_fet <- FindNeighbors(testis.combined_fet, reduction = "pca", dims = 1:30)
-testis.combined_fet <- FindClusters(testis.combined_fet, resolution = 0.5)
-
-testis.combined_emb <- RunPCA(testis.combined_emb, verbose = FALSE)
-testis.combined_emb <- RunUMAP(testis.combined_emb, reduction = "pca", dims = 1:30)
-testis.combined_emb <- FindNeighbors(testis.combined_emb, reduction = "pca", dims = 1:30)
-testis.combined_emb <- FindClusters(testis.combined_emb, resolution = 0.5)
-
 ```
 
 
 ```{r plots}
 
-p1 <- DimPlot(testis.combined_fet, reduction = "umap", group.by = "age_weeks")
-p2 <- DimPlot(testis.combined_fet, reduction = "umap", label = TRUE, repel = TRUE)
+p1 <- DimPlot(testis.combined_all, reduction = "umap", group.by = "age_weeks")
+p2 <- DimPlot(testis.combined_all, reduction = "umap", label = TRUE, repel = TRUE)
 p1 + p2
 
 ```
@@ -209,14 +151,11 @@ p1 + p2
 
 ```{r saveloadRdatafile}
 
-save(testis.combined_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_all.RData")
-
-save(testis.combined_emb, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_emb.RData")
-
-save(testis.combined_fet, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined_fet.RData")
+save(testis.combined_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse124263/testis.pnd2pnd7_comb.RData")
 
 
-#load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/testis.combined.RData")
+
+#load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse124263/testis.pnd2pnd7_comb.RData")
 ```
 ## Next Use Seurat to identify conserved cell markers from the clusters across time
 
@@ -227,53 +166,37 @@ this uses the original data, not the integrated data
 ```{r conserved markers}
 
 DefaultAssay(testis.combined_all) <- "RNA"
-DefaultAssay(testis.combined_emb) <- "RNA"
-DefaultAssay(testis.combined_fet) <- "RNA"
 
-clusts <- 0:17
-clusts_fet <- 0:15
-clusts_emb <- 0:11
+
+clusts <- 0:11
+
 
 conserved.markers_all <- lapply(X = clusts, FUN = function(x){
   
-  x <- FindConservedMarkers(testis.combined_all, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
-  })
-
-conserved.markers_emb <- lapply(X = clusts_emb, FUN = function(x){
-  
-  x <- FindConservedMarkers(testis.combined_emb, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
+  x <- FindConservedMarkers(testis.combined_all, ident.1 = x, grouping.var = "age_weeks", verbose = TRUE)
   })
 
 
-conserved.markers_fet <- lapply(X = clusts_fet, FUN = function(x){
-  
-  x <- FindConservedMarkers(testis.combined_fet, ident.1 = x, grouping.var = "age_weeks", verbose = FALSE)
-  })
 ```
 
 save as data files
 
 ```{r save files}
 
-save(conserved.markers_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_all.RData")
+save(conserved.markers_all, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse124263/conserved.markers_neonate_all.RData")
 
-save(conserved.markers_emb, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_emb.RData")
 
-save(conserved.markers_fet, file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_fet.RData")
 
 
 ```
 
 
-save as data files
+load data files
 
 ```{r load files}
 
-load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_all.RData")
+#load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse124263/conserved.markers_neonate_all.RData")
 
-load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_emb.RData")
-
-load(file = "/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_fet.RData")
 
 ```
 
@@ -285,16 +208,13 @@ We also have the, "conserved.markers_all,"
 
 ```{r flatten list}
 
-names(conserved.markers_fet) <- clusts_fet[0:15]
-names(conserved.markers_emb) <- clusts_emb[0:11]
-names(conserved.markers_all) <- clusts[0:17]
+names(conserved.markers_all) <- clusts[0:11]
 
 
 # Flatten list of dataframes
 
-conserved.markers_fet_top10 <- map_df(conserved.markers_fet, head, 10, .id = 'cluster')
-conserved.markers_emb_top10 <- map_df(conserved.markers_emb, head, 10, .id = 'cluster')
-conserved.markers_all_top10 <- map_df(conserved.markers_all, head, 10, .id = 'cluster')
+
+conserved.markers_allneonate_top10 <- map_df(conserved.markers_all, head, 10, .id = 'cluster')
 
 
 ```
