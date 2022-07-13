@@ -216,5 +216,6 @@ names(conserved.markers_all) <- clusts[0:11]
 
 conserved.markers_allneonate_top10 <- map_df(conserved.markers_all, head, 10, .id = 'cluster')
 
+write.csv(conserved.markers_allneonate_top10, file="/bigdata/faustmanlab/bch/sc-testis/human/gse124263/conserved.markers_allneonate_top10.csv")
 
 ```

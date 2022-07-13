@@ -295,5 +295,10 @@ conserved.markers_fet_top10 <- map_df(conserved.markers_fet, head, 10, .id = 'cl
 conserved.markers_emb_top10 <- map_df(conserved.markers_emb, head, 10, .id = 'cluster')
 conserved.markers_all_top10 <- map_df(conserved.markers_all, head, 10, .id = 'cluster')
 
+write.csv(conserved.markers_fet_top10, file="/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_fet_top10.csv")
+write.csv(conserved.markers_emb_top10, file="/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_emb_top10.csv")
+write.csv(conserved.markers_all_top10, file="/bigdata/faustmanlab/bch/sc-testis/human/gse143356/conserved.markers_all_top10.csv")
+
+
 
 ```
